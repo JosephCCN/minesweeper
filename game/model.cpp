@@ -2,7 +2,10 @@
 #include<utility>
 #include <stdexcept>
 #include<iostream>
+
 #include "model.h"
+#include "error_code.h"
+
 using namespace std;
 
 int dy[3] = {-1, 1, 0};
@@ -40,24 +43,21 @@ game::game(vector<pair<int, int> > mine, int a, int b) {
     max_y = b;
 }
 
-bool game::valid(int x, int y) {
-     return (1 <= x && x <= max_x && 1 <= y && y <= max_y);
-}
-
-void game::valid_move(int x, int y) {
-    if(!valid(x, y)) throw invalid_argument("Invalid move");
-}
-
 bool game::check_bomb(int x, int y) {
     valid_move(x, y);
     return board[x][y] == -1;
 }
 
 void game::click(int x, int y) {
+    increment_move();
     valid_move(x, y);
-    if(board[x][y] == -1) return; //left to be handled
+    if(board[x][y] == -1) GameLoss(); //left to be handled
     if(show_board[x][y] != -1) return;
     update_show_board(x, y);
+}
+
+void game::increment_move() {
+    move++;
 }
 
 void game::sb() {
@@ -68,7 +68,6 @@ void game::sb() {
     }
 }
 
-
 void game::b() {
     for(int i=1;i<=max_x;i++){
         for(int j=1;j<=max_y;j++) 
@@ -77,3 +76,31 @@ void game::b() {
     }
 }
 
+void game::Error(int code) {
+    string token;
+    switch(code){
+        case INVALID_MOVE:
+            token = "Error " + to_string(code) + ": Invalid Move on move " + to_string(move);
+            break;
+        default:
+            token = "unknown error";
+    }
+    game_terminate(token);
+}
+
+void game::GameLoss() {
+    game_terminate("Game loss on move " + to_string(move));
+}
+
+bool game::valid(int x, int y) {
+    return (1 <= x && x <= max_x && 1 <= y && y <= max_y);
+}
+
+void game::valid_move(int x, int y) {
+    if(!valid(x, y)) Error(INVALID_MOVE);
+}
+
+void game::game_terminate(string token){
+    cout << token << endl;
+    exit(0);
+}
