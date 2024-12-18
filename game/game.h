@@ -8,7 +8,7 @@
 using namespace std;
 
 
-class game{
+class Game{
     private:
         int board[1005][1005];
         int show_board[1005][1005];
@@ -28,7 +28,7 @@ class game{
         void Error(int);
         void GameLoss();
     public:
-        game(vector<pair<int, int> >, int, int);
+        Game(vector<pair<int, int> >, int, int);
         void click(int, int);
         void sb();
         void b();

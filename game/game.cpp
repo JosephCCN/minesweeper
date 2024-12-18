@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include<iostream>
 
-#include "model.h"
+#include "game.h"
 #include "error_code.h"
 
 using namespace std;
@@ -11,7 +11,7 @@ using namespace std;
 int dy[3] = {-1, 1, 0};
 int dx[3] = {-1, 1, 0};
 
-void game::update_show_board(int x, int y) {
+void Game::update_show_board(int x, int y) {
     if(x <= 0 || y <= 0 || x > max_x || y > max_y) return;
 
     show_board[x][y] = board[x][y];
@@ -26,7 +26,7 @@ void game::update_show_board(int x, int y) {
     } 
 } 
 
-game::game(vector<pair<int, int> > mine, int a, int b) {
+Game::Game(vector<pair<int, int> > mine, int a, int b) {
     for(auto x:mine) {
         for(int i=0;i<3;i++) {
             for(int j=0;j<3;j++) {
@@ -42,12 +42,12 @@ game::game(vector<pair<int, int> > mine, int a, int b) {
     max_y = b;
 }
 
-bool game::check_bomb(int x, int y) {
+bool Game::check_bomb(int x, int y) {
     valid_move(x, y);
     return board[x][y] == BOMB;
 }
 
-void game::click(int x, int y) {
+void Game::click(int x, int y) {
     increment_move();
     valid_move(x, y);
     if(board[x][y] == BOMB) GameLoss(); //left to be handled
@@ -55,11 +55,11 @@ void game::click(int x, int y) {
     update_show_board(x, y);
 }
 
-void game::increment_move() {
+void Game::increment_move() {
     move++;
 }
 
-void game::sb() {
+void Game::sb() {
     for(int i=1;i<=max_x;i++) {
         for(int j=1;j<=max_y;j++) 
             cout << show_board[i][j] << ' ';
@@ -67,7 +67,7 @@ void game::sb() {
     }
 }
 
-void game::b() {
+void Game::b() {
     for(int i=1;i<=max_x;i++){
         for(int j=1;j<=max_y;j++) 
             cout << board[i][j] << ' ';
@@ -75,7 +75,7 @@ void game::b() {
     }
 }
 
-void game::Error(int code) {
+void Game::Error(int code) {
     string token;
     switch(code){
         case INVALID_MOVE:
@@ -87,19 +87,19 @@ void game::Error(int code) {
     game_terminate(token);
 }
 
-void game::GameLoss() {
+void Game::GameLoss() {
     game_terminate("Game loss on move " + to_string(move));
 }
 
-bool game::valid(int x, int y) {
+bool Game::valid(int x, int y) {
     return (1 <= x && x <= max_x && 1 <= y && y <= max_y);
 }
 
-void game::valid_move(int x, int y) {
+void Game::valid_move(int x, int y) {
     if(!valid(x, y)) Error(INVALID_MOVE);
 }
 
-void game::game_terminate(string token){
+void Game::game_terminate(string token){
     cout << token << endl;
     exit(0);
 }
