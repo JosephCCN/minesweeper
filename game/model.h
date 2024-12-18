@@ -7,6 +7,7 @@
 
 using namespace std;
 
+
 class game{
     private:
         int board[1005][1005];
@@ -14,6 +15,10 @@ class game{
         int max_x = 0;
         int max_y = 0;
         int move = 0;
+
+        const int BOMB = -1;
+        const int UNSHOWN = -1;
+
         void update_show_board(int,int);
         void game_terminate(string);
         void increment_move();

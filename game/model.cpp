@@ -11,7 +11,6 @@ using namespace std;
 int dy[3] = {-1, 1, 0};
 int dx[3] = {-1, 1, 0};
 
-
 void game::update_show_board(int x, int y) {
     if(x <= 0 || y <= 0 || x > max_x || y > max_y) return;
 
@@ -20,7 +19,7 @@ void game::update_show_board(int x, int y) {
 
     for(int i=0;i<3;i++) {
         for(int j=0;j<3;j++) {
-            if(show_board[x + dx[i]][y + dy[j]] == -1) {
+            if(show_board[x + dx[i]][y + dy[j]] == UNSHOWN) {
                 update_show_board(x + dx[i], y + dy[j]);
             }
         }
@@ -35,24 +34,24 @@ game::game(vector<pair<int, int> > mine, int a, int b) {
             }
         } 
     }
-    for(auto x:mine) board[x.first][x.second] = -1;
+    for(auto x:mine) board[x.first][x.second] = BOMB;
     for(int i=1;i<=a;i++)
         for(int j=1;j<=b;j++)
-            show_board[i][j] = -1;
+            show_board[i][j] = UNSHOWN;
     max_x = a;
     max_y = b;
 }
 
 bool game::check_bomb(int x, int y) {
     valid_move(x, y);
-    return board[x][y] == -1;
+    return board[x][y] == BOMB;
 }
 
 void game::click(int x, int y) {
     increment_move();
     valid_move(x, y);
-    if(board[x][y] == -1) GameLoss(); //left to be handled
-    if(show_board[x][y] != -1) return;
+    if(board[x][y] == BOMB) GameLoss(); //left to be handled
+    if(show_board[x][y] != UNSHOWN) return;
     update_show_board(x, y);
 }
 
