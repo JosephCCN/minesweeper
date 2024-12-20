@@ -5,11 +5,20 @@
 #include <cstdarg>
 #include <functional>
 #include <string>
+#include<thread>
+#include<condition_variable>
+#include<mutex>
+#include<future>
+#include <chrono>
 
 #include "game.h"
 #include "player.h"
 
 using namespace std;
+
+#define moveRunTime 1 //in second
+
+condition_variable cv;
 
 
 class defer{
@@ -59,6 +68,11 @@ void getMeta(char *path, vector<pair<int, int> > &bomb, pair<int, int> &mapSize)
     }
 }
 
+void playerMoveRunner(Player &player, pair<int, int> &res) {
+    res = player.move();
+    cv.notify_one();
+}
+
 int main(int argc, char *argv[]) {
     if(argc < 2) {
         Error(MISSING_ARG);
@@ -70,5 +84,26 @@ int main(int argc, char *argv[]) {
 
     Player player = Player();
     Game game = Game(bomb, mapSize.first, mapSize.second);
+
+    bool timeout = false;
+
+    for(int i=0;i<2;i++) {
+
+        pair<int, int> res;
+        thread playerMoveTh(playerMoveRunner, ref(player), ref(res));
+
+        mutex mtx;
+        unique_lock<mutex> lck(mtx);
+        timeout = ( cv.wait_for(lck, chrono::seconds(moveRunTime)) == cv_status::timeout );
+        if(timeout) {
+            playerMoveTh.detach();
+            break;
+        }
+        playerMoveTh.join();
+
+        cout << res.first << ' ' << res.second << endl;
+    }
+
+    if(timeout) cout << "timeout";
 
 }
