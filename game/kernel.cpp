@@ -62,14 +62,14 @@ void getMeta(char *path, vector<pair<int, int> > &bomb, pair<int, int> &mapSize)
     in >> mapSize.first;
     in >> mapSize.second;
     while(in >> tmp) {
-        if(cnt&1 == 0) _ = tmp;
+        if(cnt % 2 == 0) _ = tmp;
         else bomb.push_back({_, tmp});
         cnt++;
     }
 }
 
-void playerMoveRunner(Player &player, pair<int, int> &res) {
-    res = player.move();
+void playerMoveRunner(Player &player, pair<int, int> &res, int** showBoard, bool &flag) {
+    res = player.move(showBoard, flag);
     cv.notify_one();
 }
 
@@ -86,24 +86,48 @@ int main(int argc, char *argv[]) {
     Game game = Game(bomb, mapSize.first, mapSize.second);
 
     bool timeout = false;
+    vector<pair<int, int> > moveLog; 
+    int** showBoard = (int**)malloc(sizeof(int*) * mapSize.first);
+    for(int i=0;i<mapSize.first;i++) showBoard[i] = (int*)malloc(sizeof(int) * mapSize.second);
 
-    for(int i=0;i<2;i++) {
+    for(int i=0;i<2 && game.isPlaying();i++) {
+
+        game.getShowBoard(showBoard);
 
         pair<int, int> res;
-        thread playerMoveTh(playerMoveRunner, ref(player), ref(res));
+        bool flag = false;
+        thread playerMoveTh(playerMoveRunner, ref(player), ref(res), showBoard, ref(flag));
 
         mutex mtx;
         unique_lock<mutex> lck(mtx);
         timeout = ( cv.wait_for(lck, chrono::seconds(moveRunTime)) == cv_status::timeout );
         if(timeout) {
             playerMoveTh.detach();
+            cout << "Error" << endl;
+            cout << "Timeout on move " << game.getMove() << endl; 
             break;
         }
         playerMoveTh.join();
-
-        cout << res.first << ' ' << res.second << endl;
+        moveLog.push_back(res);
+        if(flag) {
+            game.flag(res.first, res.second);
+        }
+        else {
+            game.click(res.first, res.second);
+        }
+        
+        if(game.isLoss()) {
+            cout << "LOSS" << endl;
+            cout << game.report() << endl;
+        }
+        else if(game.isError()) {
+            cout << "Error" << endl;
+            cout << game.report() << endl;
+        }
     }
 
-    if(timeout) cout << "timeout";
+    for(auto x:moveLog) cout << x.first << ' ' << x.second << endl;
+    if(game.isWin()) cout << game.report() << endl;
+
 
 }
