@@ -11,10 +11,10 @@ int dy[3] = {-1, 1, 0};
 int dx[3] = {-1, 1, 0};
 
 void Game::update_show_board(int x, int y) {
-    if(x <= 0 || y <= 0 || x > max_x || y > max_y) return;
+    if(x <= 0 || y <= 0 || x > width || y > height) return;
 
     show_board[x][y] = board[x][y];
-    if(board[x][y] != 0) return; // stop update show_board if the grid is not empty
+    if(board[x][y] != EMPTY) return; // stop update show_board if the grid is not empty
 
     for(int i=0;i<3;i++) {
         for(int j=0;j<3;j++) {
@@ -26,6 +26,7 @@ void Game::update_show_board(int x, int y) {
 } 
 
 Game::Game(vector<pair<int, int> > mine, int a, int b) {
+    // calculate near bomb
     for(auto x:mine) {
         for(int i=0;i<3;i++) {
             for(int j=0;j<3;j++) {
@@ -33,14 +34,17 @@ Game::Game(vector<pair<int, int> > mine, int a, int b) {
             }
         } 
     }
+    // set bomb location
     for(auto x:mine) board[x.first][x.second] = BOMB;
+
+    //init show_board
     for(int i=1;i<=a;i++)
         for(int j=1;j<=b;j++)
             show_board[i][j] = UNSHOWN;
-    max_x = a;
-    max_y = b;
-    bombRemain = mine.size();
 
+    width = a;
+    height = b;
+    bombRemain = mine.size();
     gameState.code = PLAYING;
     gameState.token = "";
 }
@@ -53,7 +57,7 @@ bool Game::check_bomb(int x, int y) {
 void Game::click(int x, int y) {
     increment_move();
     valid_move(x, y);
-    if(show_board[x][y] != UNSHOWN || show_board[x][y] == FLAG) return;
+    if(show_board[x][y] != UNSHOWN || show_board[x][y] == FLAG) Error(DOUBLE_CLICK);
     if(board[x][y] == BOMB) {
         if(move == 1) { // first move will never click on a bomb
             for(int i=0;i<3;i++) {
@@ -84,6 +88,9 @@ void Game::flag(int x, int y) {
         show_board[x][y] = FLAG;
         if(board[x][y] == BOMB) bombRemain--; //flag a bomb grid
     }
+    else{ //not flagged or unshown
+        Error(DOUBLE_CLICK);
+    }
     if(bombRemain == 0) setState(WIN, "Game Finish on move " + to_string(move));
 }
 
@@ -97,6 +104,8 @@ void Game::Error(ERROR_CODE code) {
         case INVALID_MOVE:
             token = "Error " + to_string(code) + ": Invalid Move on move " + to_string(move);
             break;
+        case DOUBLE_CLICK:
+            token = "Error " + to_string(code) + ": Double click on move " + to_string(move);
     }
     setState(ERROR_END, token);
 }
@@ -106,7 +115,7 @@ void Game::GameLoss() {
 }
 
 bool Game::valid(int x, int y) {
-    return (1 <= x && x <= max_x && 1 <= y && y <= max_y);
+    return (1 <= x && x <= width && 1 <= y && y <= height);
 }
 
 void Game::valid_move(int x, int y) {
@@ -147,23 +156,23 @@ int Game::getMove() {
 }
 
 void Game::getShowBoard(int** playerBoard) {
-    for(int i=0;i<max_x;i++) {
-        for(int j=0;j<max_y;j++) playerBoard[i][j] = show_board[i][j];
+    for(int i=0;i<width;i++) {
+        for(int j=0;j<height;j++) playerBoard[i][j] = show_board[i][j];
     }
 }
 
 #ifndef IOSTREAM_INCLUDED
 void Game::sb() {
-    for(int i=1;i<=max_x;i++) {
-        for(int j=1;j<=max_y;j++) 
+    for(int i=1;i<=width;i++) {
+        for(int j=1;j<=height;j++) 
             cout << show_board[i][j] << ' ';
         cout << endl;
     }
 }
 
 void Game::b() {
-    for(int i=1;i<=max_x;i++){
-        for(int j=1;j<=max_y;j++) 
+    for(int i=1;i<=width;i++){
+        for(int j=1;j<=height;j++) 
             cout << board[i][j] << ' ';
         cout << endl;
     }

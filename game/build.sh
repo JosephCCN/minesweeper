@@ -1,1 +1,1 @@
-g++ main.cpp model.cpp -o main
+g++ kernel.cpp game.cpp player.cpp -o run

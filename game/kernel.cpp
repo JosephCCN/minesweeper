@@ -87,10 +87,10 @@ int main(int argc, char *argv[]) {
 
     bool timeout = false;
     vector<pair<int, int> > moveLog; 
-    int** showBoard = (int**)malloc(sizeof(int*) * mapSize.first);
-    for(int i=0;i<mapSize.first;i++) showBoard[i] = (int*)malloc(sizeof(int) * mapSize.second);
+    int** showBoard = (int**)malloc(sizeof(int*) * (1 + mapSize.first));
+    for(int i=0;i<mapSize.first;i++) showBoard[i] = (int*)malloc(sizeof(int) * (1 + mapSize.second));
 
-    for(int i=0;i<2 && game.isPlaying();i++) {
+    for(int i=0;i < 2 && game.isPlaying();i++) {
 
         game.getShowBoard(showBoard);
 
@@ -98,9 +98,10 @@ int main(int argc, char *argv[]) {
         bool flag = false;
         thread playerMoveTh(playerMoveRunner, ref(player), ref(res), showBoard, ref(flag));
 
+        //count moveRunTime seconds
         mutex mtx;
         unique_lock<mutex> lck(mtx);
-        timeout = ( cv.wait_for(lck, chrono::seconds(moveRunTime)) == cv_status::timeout );
+        timeout = ( cv.wait_for(lck, chrono::seconds(moveRunTime)) == cv_status::timeout ); //count timeout
         if(timeout) {
             playerMoveTh.detach();
             cout << "Error" << endl;
@@ -109,6 +110,7 @@ int main(int argc, char *argv[]) {
         }
         playerMoveTh.join();
         moveLog.push_back(res);
+        // check flag or click
         if(flag) {
             game.flag(res.first, res.second);
         }
@@ -128,6 +130,5 @@ int main(int argc, char *argv[]) {
 
     for(auto x:moveLog) cout << x.first << ' ' << x.second << endl;
     if(game.isWin()) cout << game.report() << endl;
-
 
 }
