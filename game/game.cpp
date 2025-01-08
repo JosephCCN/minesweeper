@@ -91,7 +91,7 @@ void Game::flag(int x, int y) {
     else{ //not flagged or unshown
         Error(DOUBLE_CLICK);
     }
-    if(bombRemain == 0) setState(WIN, "Game Finish on move " + to_string(move));
+    if(bombRemain == 0) setState(WIN, "Game Win and Finish on move " + to_string(move)); 
 }
 
 void Game::increment_move() {

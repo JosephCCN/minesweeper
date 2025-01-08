@@ -9,12 +9,10 @@ bool first = true;
 
 pair<int, int> Player::move(int** board, bool &flag) {
     //TODO
-    // cout << board[1][1] << endl;
-    // flag = true;
+    flag = true;
     if(first) {
         first = false;
-        return {1,2};
+        return {1, 1};
     }
-    flag = true;
-    return {1, 1};
+    return {2, 2};
 }

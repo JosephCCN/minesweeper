@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
     int** showBoard = (int**)malloc(sizeof(int*) * (1 + mapSize.first));
     for(int i=0;i<mapSize.first;i++) showBoard[i] = (int*)malloc(sizeof(int) * (1 + mapSize.second));
 
-    for(int i=0;i < 2 && game.isPlaying();i++) {
+    for(;game.isPlaying();) {
 
         game.getShowBoard(showBoard);
 
