@@ -6,6 +6,7 @@ using namespace std;
 
 class Player{
     public:
+        void init(int, int);
         pair<int, int> move(int**, bool&);
 };
 

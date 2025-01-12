@@ -21,19 +21,19 @@ using namespace std;
 condition_variable cv;
 
 
-class defer{
-    function<void()> func_;
-    public:
-        defer(function<void()> func):
-        func_(func){
+// class defer{
+//     function<void()> func_;
+//     public:
+//         defer(function<void()> func):
+//         func_(func){
 
-        }
-        ~defer() {
-            func_();
-        }
-        defer& operator=(const defer&) = delete;
-        defer(const defer&) = delete;
-};
+//         }
+//         ~defer() {
+//             func_();
+//         }
+//         defer& operator=(const defer&) = delete;
+//         defer(const defer&) = delete;
+// }
 
 enum ERROR {WRONG_PATH, MISSING_ARG};
 
@@ -73,6 +73,21 @@ void playerMoveRunner(Player &player, pair<int, int> &res, int** showBoard, bool
     cv.notify_one();
 }
 
+void playerInit(Player &player, int width, int height) {
+    player.init(width, height);
+    cv.notify_one();
+}
+
+//time a running of a thread
+bool threadTimer(thread th, chrono::seconds sec) { //thread must be moved to @th with std::move
+    mutex mtx;
+    unique_lock<mutex> lck(mtx);
+    bool timeout = (cv.wait_for(lck, sec) == cv_status::timeout);
+    if(timeout) th.detach();
+    else th.join();
+    return timeout;
+}
+
 int main(int argc, char *argv[]) {
     if(argc < 2) {
         Error(MISSING_ARG);
@@ -85,10 +100,19 @@ int main(int argc, char *argv[]) {
     Player player = Player();
     Game game = Game(bomb, mapSize.first, mapSize.second);
 
-    bool timeout = false;
     vector<pair<int, int> > moveLog; 
     int** showBoard = (int**)malloc(sizeof(int*) * (1 + mapSize.first));
     for(int i=0;i<mapSize.first;i++) showBoard[i] = (int*)malloc(sizeof(int) * (1 + mapSize.second));
+
+    //init board size to player
+    thread playerInitTh(playerInit, ref(player), mapSize.first, mapSize.second);
+    if(threadTimer(move(playerInitTh), chrono::seconds(moveRunTime))) {
+        cout << "Error" << endl;
+        cout << "Timeout on init move" << endl; 
+        return 0;
+    }
+
+    //game start to play
 
     for(;game.isPlaying();) {
 
@@ -99,16 +123,11 @@ int main(int argc, char *argv[]) {
         thread playerMoveTh(playerMoveRunner, ref(player), ref(res), showBoard, ref(flag));
 
         //count moveRunTime seconds
-        mutex mtx;
-        unique_lock<mutex> lck(mtx);
-        timeout = ( cv.wait_for(lck, chrono::seconds(moveRunTime)) == cv_status::timeout ); //count timeout
-        if(timeout) {
-            playerMoveTh.detach();
+        if(threadTimer(move(playerMoveTh), chrono::seconds(moveRunTime))) {
             cout << "Error" << endl;
             cout << "Timeout on move " << game.getMove() << endl; 
             break;
         }
-        playerMoveTh.join();
         moveLog.push_back(res);
         // check flag or click
         if(flag) {

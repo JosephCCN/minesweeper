@@ -6,6 +6,12 @@
 using namespace std;
 
 bool first = true;
+int w, h;
+
+void Player::init(int width, int height) {
+    w = width;
+    h = height;
+}
 
 pair<int, int> Player::move(int** board, bool &flag) {
     //TODO
